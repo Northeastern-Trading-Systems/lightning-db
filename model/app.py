@@ -43,6 +43,7 @@ def test_db():
         json_data.append(dict(zip(col_headers, row)))
     return jsonify(json_data)
 
+
 # If this file is being run directly, then run the application 
 # via the app object. 
 # debug = True will provide helpful debugging information and 
