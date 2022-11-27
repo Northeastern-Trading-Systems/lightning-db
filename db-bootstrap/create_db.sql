@@ -20,12 +20,12 @@ CREATE TABLE strategy (
 -- of trade legs (for more complex, multi-legged trades).
 CREATE TABLE trade (
     trade_id integer UNIQUE NOT NULL,
-    strategy_id varchar(50),
+    strategy_id integer,
     open_time datetime,
     close_time datetime,
     PRIMARY KEY (trade_id),
     CONSTRAINT fk_1 
-        FOREIGN KEY (strategy) REFERENCES strategy (strategy_id)
+        FOREIGN KEY (strategy_id) REFERENCES strategy (strategy_id)
         ON UPDATE cascade ON DELETE restrict
 );
 
@@ -38,7 +38,7 @@ CREATE TABLE trade_leg (
     open_time datetime,
     close_time datetime,
     PRIMARY KEY(leg_no, trade_id),
-    CONSTRAINT fk_1
+    CONSTRAINT fk_2
         FOREIGN KEY (trade_id) REFERENCES trade (trade_id)
         ON UPDATE restrict ON DELETE restrict
 );
@@ -51,11 +51,11 @@ CREATE TABLE fill (
     trade_id integer NOT NULL,
     contract varchar(50),
     qty integer,
-    avg float(64),
+    avg float(32),
     placement_time datetime,
     filled_time datetime,
     PRIMARY KEY (fill_id),
-    CONSTRAINT fk_1
+    CONSTRAINT fk_3
         FOREIGN KEY (leg_no, trade_id) REFERENCES trade_leg (leg_no, trade_id)
         ON UPDATE cascade ON DELETE restrict
 );
