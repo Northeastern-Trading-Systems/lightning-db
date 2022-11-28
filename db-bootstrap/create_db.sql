@@ -1,5 +1,4 @@
 CREATE DATABASE nts_lightning_db;
-CREATE USER 'webapp'@'%' IDENTIFIED BY 'K%7VEJ80Et7M';
 GRANT ALL PRIVILEGES ON nts_lightning_db.* TO 'webapp'@'%';
 FLUSH PRIVILEGES;
 

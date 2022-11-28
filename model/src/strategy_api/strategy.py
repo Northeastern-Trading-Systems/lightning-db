@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify
-from app import DB_CONNECTION
+from src import db
 
 strategy_blueprint = Blueprint('strategy_blueprint', __name__)
 
@@ -17,8 +17,8 @@ def get_strategy_status(strategy):
     Running On: <AWS EC2 HostName>
     ---------------------------------------
     """
-    cur = DB_CONNECTION.get_db().cursor()
-    cur.execute(f'select * from {strategy}')
+    cur = db.get_db().cursor()
+    cur.execute(f'select * from strategy where strategy_name = "{strategy}"')
     col_headers = [x[0] for x in cur.description]
     json_data = []
     the_data = cur.fetchall()
@@ -42,7 +42,7 @@ def get_strategy_statistics(strategy):
     Launch Date: <First Date of Live Trading>
     ---------------------------------------
     """
-    cur = DB_CONNECTION.get_db().cursor()
+    cur = db.get_db().cursor()
     cur.execute(f'select * from {strategy}')
     col_headers = [x[0] for x in cur.description]
     json_data = []
@@ -63,7 +63,7 @@ def get_strategy_hist_trades(strategy, lookback):
          - Returns a JSON of all historical trades and their corresponding attributes for the last 69 calendar days from the LongGME strategy.
          - JSON is inclusive of the current calendar day but exclusive of all open trades (not historical)
     """
-    cur = DB_CONNECTION.get_db().cursor()
+    cur = db.get_db().cursor()
     # TODO: Make SQL query
     cur.execute(f'select * from {strategy}')
     col_headers = [x[0] for x in cur.description]
@@ -84,7 +84,7 @@ def get_strategy_open_trades(strategy):
          - Returns a JSON of all open trades and their corresponding attributes from the LunchBreakReversion strategy. 
          - JSON is inclusive of every trade that has a non-zero net open value (aggregate qty of all legs != 0)
     """
-    cur = DB_CONNECTION.get_db().cursor()
+    cur = db.get_db().cursor()
     # TODO: Make SQL query
     cur.execute(f'select * from {strategy}')
     col_headers = [x[0] for x in cur.description]

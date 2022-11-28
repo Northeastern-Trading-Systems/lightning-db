@@ -1,0 +1,64 @@
+version: "3.9"
+
+# We are setting up 2 services: web and 
+services:
+
+  ##################################################################
+  # configure the webserver container
+  web:
+    
+    # Set up the web server according to the Dockerfile inside the api/ folder
+    build: model/
+    
+    # connect the src folder in on the host machine to the code folder in the container. 
+    # note that the code folder in contaier is the working directory (see DockerFile).
+    volumes: ['./model:/code', './db-secrets:/secrets', './config.py:/config.py'] 
+
+    # have the container restart if it fails for some reason. 
+    restart: unless-stopped
+
+    # map host port 8001 to container port 4000 (see the EXPOSE command in api/Dockerfile)
+    ports:
+      - "8001:4000"
+
+    links:
+      - db
+
+
+
+  ##################################################################
+  # configure the mysql container
+  db:
+    # We are using the base image of MySQL v.8
+    image: mysql:8
+
+    volumes:
+      # anything in (or mounted in) /docker-entrypoint-initdb.d in the container 
+      # will automatically be executed when the container is created
+      - ./db-bootstrap:/docker-entrypoint-initdb.d/:ro
+
+    ports:
+      # mapping host port 3200 to container port 3306
+      - 3200:3306
+
+    restart: unless-stopped
+    
+    # Setting up some environment variables for secrets.
+    # Here we are setting the root password
+    # as well as creating an additional user called 
+    # webapp.  webapp user password is stored in a secret 
+    # file as well. 
+    environment:
+      MYSQL_USER: webapp
+      MYSQL_PASSWORD_FILE: /run/secrets/secret_db_pw
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/secret_db_root_pw
+    
+    secrets:
+      - secret_db_pw
+      - secret_db_root_pw
+
+secrets:
+  secret_db_pw:
+    file: ./db-secrets/db_password.txt
+  secret_db_root_pw:
+    file: ./db-secrets/db_root_password.txt
