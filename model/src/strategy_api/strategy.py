@@ -20,16 +20,7 @@ def get_strategy_status(strategy):
     Running On: <AWS EC2 HostName>
     ---------------------------------------
     """
-    cur = db.get_db().cursor()
-    cur.execute(f'select * from strategy where strategy_name = "{strategy}"')
-    col_headers = [x[0] for x in cur.description]
-    json_data = []
-    the_data = cur.fetchall()
-    for row in the_data:
-        json_data.append(dict(zip(col_headers, row)))
-    return jsonify(json_data)
-
-
+    pass
 
 @strategy_blueprint.route('/get_strategy_statistics/<strategy>')
 def get_strategy_statistics(strategy):
@@ -47,16 +38,9 @@ def get_strategy_statistics(strategy):
     Launch Date: <First Date of Live Trading>
     ---------------------------------------
     """
-    cur = db.get_db().cursor()
-    cur.execute(f'select * from strategy where strategy_name = "{strategy}"')
-    col_headers = [x[0] for x in cur.description]
-    json_data = []
-    the_data = cur.fetchall()
-    for row in the_data:
-        json_data.append(dict(zip(col_headers, row)))
-    return jsonify(json_data)
+    pass
 
-@strategy_blueprint.route('/get_strategy_hist_trades/<strategy>_<lookback>')
+@strategy_blueprint.route('/get_strategy_hist_trades/<strategy>-<lookback>')
 def get_strategy_hist_trades(strategy, lookback):
     """
     Gets all historical trades information from the specified strategy to the specified number of lookback days, where...
@@ -68,15 +52,7 @@ def get_strategy_hist_trades(strategy, lookback):
          - Returns a JSON of all historical trades and their corresponding attributes for the last 69 calendar days from the LongGME strategy.
          - JSON is inclusive of the current calendar day but exclusive of all open trades (not historical)
     """
-    cur = db.get_db().cursor()
-    # TODO: Make SQL query
-    cur.execute(f'select * from {strategy}')
-    col_headers = [x[0] for x in cur.description]
-    json_data = []
-    the_data = cur.fetchall()
-    for row in the_data:
-        json_data.append(dict(zip(col_headers, row)))
-    return jsonify(json_data)
+    pass
 
 @strategy_blueprint.route('/get_strategy_open_trades/<strategy>')
 def get_strategy_open_trades(strategy):
@@ -89,21 +65,4 @@ def get_strategy_open_trades(strategy):
          - Returns a JSON of all open trades and their corresponding attributes from the LunchBreakReversion strategy. 
          - JSON is inclusive of every trade that has a non-zero net open value (aggregate qty of all legs != 0)
     """
-    cur = db.get_db().cursor()
-    # TODO: Make SQL query
-    cur.execute(f'select * from strategy where strategy_name = {strategy}')
-    """
-    SELECT trade.trade_id, trade.open_time, 
-    FROM strategy join trade on strategy.strategy_id = trade.strategy_id
-    WHERE 
-    """
-    col_headers = [x[0] for x in cur.description]
-    json_data = []
-    the_data = cur.fetchall()
-    for row in the_data:
-        json_data.append(dict(zip(col_headers, row)))
-    return jsonify(json_data)
-
-# @strategy_blueprint.route('/add-student/<nuid><fname>')
-# def add_student(nuid, fname):
-#     return f"Added {fname} with NUID {nuid}."
+    pass
