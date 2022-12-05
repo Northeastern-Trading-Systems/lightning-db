@@ -3,6 +3,9 @@ from src import db
 
 strategy_blueprint = Blueprint('strategy_blueprint', __name__)
 
+# TODO: Make generalized SQL methods in a sql-model file
+# TODO: Redo endpoints to hit DB and do logic in python, returning as a JSON
+
 @strategy_blueprint.route('/get_strategy_status/<strategy>')
 def get_strategy_status(strategy):
     """
@@ -26,6 +29,8 @@ def get_strategy_status(strategy):
         json_data.append(dict(zip(col_headers, row)))
     return jsonify(json_data)
 
+
+
 @strategy_blueprint.route('/get_strategy_statistics/<strategy>')
 def get_strategy_statistics(strategy):
     """
@@ -43,7 +48,7 @@ def get_strategy_statistics(strategy):
     ---------------------------------------
     """
     cur = db.get_db().cursor()
-    cur.execute(f'select * from {strategy}')
+    cur.execute(f'select * from strategy where strategy_name = "{strategy}"')
     col_headers = [x[0] for x in cur.description]
     json_data = []
     the_data = cur.fetchall()
@@ -86,10 +91,19 @@ def get_strategy_open_trades(strategy):
     """
     cur = db.get_db().cursor()
     # TODO: Make SQL query
-    cur.execute(f'select * from {strategy}')
+    cur.execute(f'select * from strategy where strategy_name = {strategy}')
+    """
+    SELECT trade.trade_id, trade.open_time, 
+    FROM strategy join trade on strategy.strategy_id = trade.strategy_id
+    WHERE 
+    """
     col_headers = [x[0] for x in cur.description]
     json_data = []
     the_data = cur.fetchall()
     for row in the_data:
         json_data.append(dict(zip(col_headers, row)))
     return jsonify(json_data)
+
+# @strategy_blueprint.route('/add-student/<nuid><fname>')
+# def add_student(nuid, fname):
+#     return f"Added {fname} with NUID {nuid}."
