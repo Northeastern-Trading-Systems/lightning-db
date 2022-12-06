@@ -55,7 +55,7 @@ def get_strategy_hist_trades(strategy, lookback):
          - Returns a JSON of all historical trades and their corresponding attributes for the last 69 calendar days from the LongGME strategy.
          - JSON is inclusive of the current calendar day but exclusive of all open trades (not historical)
     """
-    pass
+    return db_model.get_historical_trades(strategy, lookback)
 
 @strategy_blueprint.route('/get_strategy_open_trades/<strategy>')
 def get_strategy_open_trades(strategy):
@@ -68,4 +68,4 @@ def get_strategy_open_trades(strategy):
          - Returns a JSON of all open trades and their corresponding attributes from the LunchBreakReversion strategy. 
          - JSON is inclusive of every trade that has a non-zero net open value (aggregate qty of all legs != 0)
     """
-    pass
+    return db_model.get_open_trades(strategy)
