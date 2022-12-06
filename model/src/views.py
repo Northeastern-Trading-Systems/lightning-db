@@ -6,7 +6,7 @@ views_blueprint = Blueprint('views', __name__)
 # we simply return a string.  
 @views_blueprint.route('/')
 def home():
-    return ('<h1>Hello from your web app!!</h1>')
+    return ('<h1>Login Screen</h1>')
 
 # This is a sample route for the /test URI.  
 # as above, it just returns a simple string. 

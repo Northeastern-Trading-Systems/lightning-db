@@ -3,7 +3,7 @@ from src import db
 
 class DBModel():
     def __init__(self):
-        self.cur = db.get_db().cursor()
+        self.cur = db.cursor()
 
     ### Generalized Queries to Retrieve Information From Each Table ###
 

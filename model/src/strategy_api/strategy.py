@@ -1,7 +1,10 @@
 from flask import Blueprint, jsonify
 from src import db
+from src.db_model import DBModel
 
 strategy_blueprint = Blueprint('strategy_blueprint', __name__)
+
+db_model = DBModel()
 
 # TODO: Make generalized SQL methods in a sql-model file
 # TODO: Redo endpoints to hit DB and do logic in python, returning as a JSON
@@ -20,7 +23,7 @@ def get_strategy_status(strategy):
     Running On: <AWS EC2 HostName>
     ---------------------------------------
     """
-    pass
+    return db_model.get_strategy_info(strategy)
 
 @strategy_blueprint.route('/get_strategy_statistics/<strategy>')
 def get_strategy_statistics(strategy):
