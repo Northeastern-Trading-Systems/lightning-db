@@ -9,21 +9,64 @@ db_model = DBModel()
 # TODO: Make generalized SQL methods in a sql-model file
 # TODO: Redo endpoints to hit DB and do logic in python, returning as a JSON
 
+### HOME PAGE ###
+
+@strategy_blueprint.route('/get_active_strategies')
+def get_active_strategies():
+    """
+    Method to get a list of all active strategies. An active strategy is defined as one that is currently running on an EC2.
+    Returns all attributes of the strategy table.
+    """
+    return db_model.get_active_strategies()
+
+### STRATEGY PAGE ###
+
 @strategy_blueprint.route('/get_strategy_status/<strategy>')
 def get_strategy_status(strategy):
     """
     Method to get the current status of a strategy. The status represents a snapshot of the strategy's current state.
     Output will come in the format:
     ---------------------------------------
-    <Strategy Name>
-    Current Active Trades: <Count of All Open Trades>
-    Current Capital Usage: <Aggregate Value of All Open Trades>
-    txt: <>
+    {
+        "strategy_name": <Strategy Name>,
+        "strategy_id": <Strategy ID>,
+        "active_trades": <Count of All Open Trades>,
+        "capital_usage": <Aggregate Value of All Open Trades>,
+        "running_on": <AWS EC2 HostName>
+    }
     (?) Error Status: <Count of Errors on Error Log>
-    Running On: <AWS EC2 HostName>
     ---------------------------------------
     """
-    return db_model.get_strategy_info(strategy)
+    strategy_info = db_model.get_strategy_info(strategy)
+    s_name = strategy
+    s_id = strategy_info[0]['strategy_id']
+    s_running_on = 'unknown'
+
+    trades = db_model.get_open_trades(strategy)
+    s_active_trades = len(trades)
+    s_capital_usage = 0
+    for i in range(len(trades)):
+        s_capital_usage += trades[i]['capital_usage']
+
+    return jsonify(strategy_name=s_name,
+     strategy_id=s_id,
+      active_trades=s_active_trades,
+       capital_usage=s_capital_usage,
+        running_on=s_running_on)
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
 
 @strategy_blueprint.route('/get_strategy_statistics/<strategy>')
 def get_strategy_statistics(strategy):
@@ -55,6 +98,7 @@ def get_strategy_hist_trades(strategy, lookback):
          - Returns a JSON of all historical trades and their corresponding attributes for the last 69 calendar days from the LongGME strategy.
          - JSON is inclusive of the current calendar day but exclusive of all open trades (not historical)
     """
+    if lookback == '0': lookback = 0
     return db_model.get_historical_trades(strategy, lookback)
 
 @strategy_blueprint.route('/get_strategy_open_trades/<strategy>')
@@ -69,3 +113,4 @@ def get_strategy_open_trades(strategy):
          - JSON is inclusive of every trade that has a non-zero net open value (aggregate qty of all legs != 0)
     """
     return db_model.get_open_trades(strategy)
+

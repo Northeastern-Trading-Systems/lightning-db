@@ -20,7 +20,7 @@ class DBModel():
         {
             "strategy_name": "MeanReversion",
             "strategy_id": 1,
-            "documentation_link": "Mean Reversion Strategy",
+            "documentation_link": "github.com/NTSLightning/mrs",
             "launch_date": "2021-01-01 00:00:00",
             "termination_date": None
         }
@@ -31,6 +31,24 @@ class DBModel():
                 self.cur.execute(f'select * from strategy')
             else:
                 self.cur.execute(f'select * from strategy where strategy_name = "{strategy}"')
+        except Exception as e:
+            return f'Error retrieving strategy information: {e}'
+
+        col_headers = [x[0] for x in self.cur.description]
+        json_data = []
+        the_data = self.cur.fetchall()
+        for row in the_data:
+            json_data.append(dict(zip(col_headers, row)))
+        return json_data
+    
+    def get_active_strategies(self):
+        """
+        Get a list of all active strategies. An active strategy is defined as one that is currently running on an EC2.
+        Returns all attributes of the strategy table.
+        """
+        
+        try:
+            self.cur.execute(f'select * from strategy where termination_date is null')
         except Exception as e:
             return f'Error retrieving strategy information: {e}'
 
@@ -229,14 +247,15 @@ class DBModel():
         """
 
         try:
-            # TODO: FIX THIS SQL QUERY
             self.cur.execute(f"""
-                Select *
+                Select trade.trade_id as trade_id, trade.open_time as open_time, trade_leg.contract as contract,
+                max(trade_leg.leg_no) as no_legs, count(fill.fill_id) as fills, sum(fill.qty * fill.avg) as capital_out
                 from strategy 
                 join trade on strategy.strategy_id = trade.strategy_id 
                 join trade_leg on trade.trade_id = trade_leg.trade_id 
                 join fill on trade_leg.leg_no = fill.leg_no and trade_leg.trade_id = fill.trade_id
-                where strategy.strategy_name = '{strategy}' and trade_leg.close_time is null
+                where strategy.strategy_name = '{strategy}' and trade.close_time is NULL
+                group by trade_id
                 order by trade.open_time;
                 """)
         except Exception as e:
@@ -249,11 +268,38 @@ class DBModel():
             json_data.append(dict(zip(col_headers, row)))
         return json_data
 
-    def get_historical_trades(self, strategy: str, lookback: int):
-        if lookback == None:
-            self.cur.execute(f'select * from trade where strategy_name = "{strategy}"')
+    def get_historical_trades(self, strategy: str, lookback):
+        if lookback == 0:
+            self.cur.execute(f"""
+                Select trade.trade_id as trade_id, trade.open_time as open_time, trade.close_time as close_time, trade_leg.contract as contract,
+                max(trade_leg.leg_no) as no_legs, count(fill.fill_id) as fills, sum(fill.qty * fill.avg) * -1 as pnl 
+                from strategy 
+                join trade on strategy.strategy_id = trade.strategy_id 
+                join trade_leg on trade.trade_id = trade_leg.trade_id 
+                join fill on trade_leg.leg_no = fill.leg_no and trade_leg.trade_id = fill.trade_id
+                where strategy.strategy_name = '{strategy}'
+                group by trade_id
+                order by trade.open_time;
+                """)
         else:
-            self.cur.execute(f'select * from trade where strategy_name = "{strategy}" order by trade_id desc limit {lookback}')
+            self.cur.execute(f"""
+                Select trade.trade_id as trade_id, trade.open_time as open_time, trade.close_time as close_time, trade_leg.contract as contract,
+                max(trade_leg.leg_no) as no_legs, count(fill.fill_id) as fills, sum(fill.qty * fill.avg) * -1 as pnl 
+                from strategy 
+                join trade on strategy.strategy_id = trade.strategy_id 
+                join trade_leg on trade.trade_id = trade_leg.trade_id 
+                join fill on trade_leg.leg_no = fill.leg_no and trade_leg.trade_id = fill.trade_id
+                where strategy.strategy_name = '{strategy}' and trade.open_time > '{lookback}' 
+                group by trade_id
+                order by trade.open_time;
+                """)
+                
+        col_headers = [x[0] for x in self.cur.description]
+        json_data = []
+        the_data = self.cur.fetchall()
+        for row in the_data:
+            json_data.append(dict(zip(col_headers, row)))
+        return json_data
     
     def get_all_trades(self, strategy: str, lookback: int):
         """
