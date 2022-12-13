@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from src import db
 from src.db_model import DBModel
 import pandas as pd
@@ -54,8 +54,8 @@ def get_daily_pnl():
 
 ### STRATEGY PAGE ###
 
-@strategy_blueprint.route('/get_strategy_status/<strategy>')
-def get_strategy_status(strategy):
+@strategy_blueprint.route('/get_strategy_status')
+def get_strategy_status():
     """
     Method to get the current status of a strategy. The status represents a snapshot of the strategy's current state.
     Output will come in the format:
@@ -70,6 +70,7 @@ def get_strategy_status(strategy):
     (?) Error Status: <Count of Errors on Error Log>
     ---------------------------------------
     """
+    strategy = request.args.get('strategy')
     strategy_info = db_model.get_strategy_info(strategy)
     s_name = strategy
     s_id = strategy_info[0]['strategy_id']
