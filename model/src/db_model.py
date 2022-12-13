@@ -111,13 +111,14 @@ class DBModel():
         avg_daily_return = (cum_pnl / df['PNL'].count())
         avg_trades_per_day = df['PNL'].count() / (df['Date'].max() - df['Date'].min()).days
         sharpe = cum_pnl / df['PNL'].std()
+        
         r_json = {
-            'cumulative_pnl': cum_pnl,
-            'ytd_pnl': ytd_pnl,
-            'avg_annual_%_return': avg_annual_return,
-            'avg_daily_%_return': avg_daily_return,
-            'avg_daily_trades': avg_trades_per_day,
-            'sharpe': sharpe
+            'cumulative_pnl': round(cum_pnl, 2),
+            'ytd_pnl': round(ytd_pnl, 2),
+            'avg_annual_return': round(avg_annual_return, 2),
+            'avg_daily_return': round(avg_daily_return, 2),
+            'avg_daily_trades': round(avg_trades_per_day, 2),
+            'sharpe': round(sharpe, 2)
         }
 
         return r_json
