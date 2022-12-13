@@ -21,7 +21,6 @@ def get_active_strategies():
     json_data = db_model.get_active_strategies()
     # remove all of the documentation_link and termination_date fields from the json_data
     for i in range(len(json_data)):
-        del json_data[i]['documentation_link']
         del json_data[i]['termination_date']
     return json_data
 
@@ -55,7 +54,7 @@ def get_daily_pnl():
 
 ### STRATEGY PAGE ###
 
-@strategy_blueprint.route('/get_strategy_status/<strategy>')
+@strategy_blueprint.route('/get_strategy_status?Strategy=<strategy>')
 def get_strategy_status(strategy):
     """
     Method to get the current status of a strategy. The status represents a snapshot of the strategy's current state.
