@@ -120,23 +120,27 @@ def get_strategy_statistics(strategy):
     """
     pass
 
-@strategy_blueprint.route('/get_strategy_hist_trades/<strategy>-<lookback>')
-def get_strategy_hist_trades(strategy, lookback):
+@strategy_blueprint.route('/get_strategy_hist_trades')
+def get_strategy_hist_trades():
     """
-    Gets all historical trades information from the specified strategy to the specified number of lookback days, where...
+    Gets all historical trades information from the specified strategy to the specified number of lookback months, where...
     Strategy: Name of the strategy to get historical trade information from
         - Format: Identical to format in DB (i.e. CamelCase proper)
-    Lookback: Limit of calendar days to request historical trade information for
+    Lookback: Limit of calendar months to request historical trade information for
 
-    ex.) get_strategy_hist_trades(LongGME, 69)
-         - Returns a JSON of all historical trades and their corresponding attributes for the last 69 calendar days from the LongGME strategy.
+    ex.) get_strategy_hist_trades(LongGME, 6)
+         - Returns a JSON of all historical trades and their corresponding attributes for the last 6 calendar months from the LongGME strategy.
          - JSON is inclusive of the current calendar day but exclusive of all open trades (not historical)
     """
-    if lookback == '0': lookback = 0
+    strategy = request.args.get('strategy')
+    lookback = request.args.get('lookback')
+    # Potentially convert the type to an integer
+    if type(lookback) == str: lookback = int(lookback)
+
     return db_model.get_historical_trades(strategy, lookback)
 
-@strategy_blueprint.route('/get_strategy_open_trades/<strategy>')
-def get_strategy_open_trades(strategy):
+@strategy_blueprint.route('/get_strategy_open_trades')
+def get_strategy_open_trades():
     """
     Gets all open trades information from the specified strategy, where...
     Strategy: Name of the strategy to get historical trade information from
@@ -146,5 +150,7 @@ def get_strategy_open_trades(strategy):
          - Returns a JSON of all open trades and their corresponding attributes from the LunchBreakReversion strategy. 
          - JSON is inclusive of every trade that has a non-zero net open value (aggregate qty of all legs != 0)
     """
+    strategy = request.args.get('strategy')
+    
     return db_model.get_open_trades(strategy)
 

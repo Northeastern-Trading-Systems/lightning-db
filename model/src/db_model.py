@@ -1,5 +1,7 @@
 # imports
 from src import db
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
 class DBModel():
     def __init__(self):
@@ -305,6 +307,9 @@ class DBModel():
                 order by trade.open_time;
                 """)
         else:
+            # Convert the lookback into a datetime object that is lookback months from today
+            lookback = datetime.now() - relativedelta(months=lookback)
+            lookback = lookback.strftime("%Y-%m-%d %H:%M:%S")
             self.cur.execute(f"""
                 Select trade.trade_id as trade_id, trade.open_time as open_time, trade.close_time as close_time, trade_leg.contract as contract,
                 max(trade_leg.leg_no) as no_legs, count(fill.fill_id) as fills, sum(fill.qty * fill.avg) * -1 as pnl 
