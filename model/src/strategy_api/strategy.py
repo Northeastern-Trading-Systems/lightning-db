@@ -79,13 +79,8 @@ def get_strategy_status():
     """
     try:
         strategy = request.args.get('strategy')
-        if strategy == None:
-            return 'Error: No strategy specified'
-        # if the strategy contains HTTP in the string, then make it the default LongFTX strategy
-        if 'http' in strategy.lower():
-            strategy = 'LongFTX'
     except Exception as e:
-        return f'Error: {e}'
+        strategy = 'BullBreakout'
     
     try:
         strategy_info = db_model.get_strategy_info(strategy)
@@ -164,13 +159,12 @@ def get_strategy_statistics():
     Sharpe: <Cumulative Sharpe Ratio of Strategy>
     ---------------------------------------
     """
+
     try:
         strategy = request.args.get('strategy')
-
-        return db_model.get_strategy_statistics(strategy)
-    
     except Exception as e:
-        return f'Error: {e}'
+        strategy = 'BullBreakout'
+    return db_model.get_strategy_statistics(strategy)
 
 @strategy_blueprint.route('/get_strategy_pnl')
 def get_strategy_pnl():
@@ -186,23 +180,23 @@ def get_strategy_pnl():
     """
     try:
         strategy = request.args.get('strategy')
-        json_data = db_model.get_strategy_pnl(strategy)
-        try:
-            df = pd.DataFrame(json_data)
-            df['Date'] = pd.to_datetime(df['Date'])
-            df = df.set_index('Date')
-            df = df.groupby(pd.Grouper(freq='D')).sum()
-            df = df.reset_index()
-            df['Date'] = df['Date'].dt.strftime('%Y-%m-%d')
-            col_headers = [x for x in df.columns]
-            json_data = []
-            for entry in df.values:
-                json_data.append(dict(zip(col_headers, entry)))
-        except:
-            return 'Error: Incorrectly formatted JSON data'
-        
-        # Error with pd.Dataframe - need to pass a list of lists not a list of dicts
-
-        return json_data
     except Exception as e:
-        return f'Error: {e}'
+        strategy = 'BullBreakout'
+    
+    json_data = db_model.get_strategy_pnl(strategy)
+    try:
+        df = pd.DataFrame(json_data)
+        df['Date'] = pd.to_datetime(df['Date'])
+        df = df.set_index('Date')
+        df = df.groupby(pd.Grouper(freq='D')).sum()
+        df = df.reset_index()
+        df['Date'] = df['Date'].dt.strftime('%Y-%m-%d')
+        col_headers = [x for x in df.columns]
+        json_data = []
+        for entry in df.values:
+            json_data.append(dict(zip(col_headers, entry)))
+    except:
+        return 'Error: Incorrectly formatted JSON data'
+        
+    # Error with pd.Dataframe - need to pass a list of lists not a list of dicts
+    return json_data
