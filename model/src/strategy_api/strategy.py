@@ -46,6 +46,7 @@ def get_daily_pnl():
     df = df.groupby(pd.Grouper(freq='D')).sum()
     df = df.reset_index()
     df['Date'] = df['Date'].dt.strftime('%Y-%m-%d')
+    df['Date'] = df['Date'].str[5:]
     col_headers = [x for x in df.columns]
     json_data = []
     for entry in df.values:
