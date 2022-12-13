@@ -79,6 +79,15 @@ def get_strategy_status():
     """
     try:
         strategy = request.args.get('strategy')
+        if strategy == None:
+            return 'Error: No strategy specified'
+        # if the strategy contains HTTP in the string, then make it the default LongFTX strategy
+        if 'http' in strategy.lower():
+            strategy = 'LongFTX'
+    except Exception as e:
+        return f'Error: {e}'
+    
+    try:
         strategy_info = db_model.get_strategy_info(strategy)
         s_name = strategy
         s_id = strategy_info[0]['strategy_id']
