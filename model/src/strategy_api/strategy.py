@@ -162,9 +162,9 @@ def get_strategy_statistics():
 
     try:
         strategy = request.args.get('strategy')
+        return db_model.get_strategy_statistics(strategy)
     except Exception as e:
-        strategy = 'BullBreakout'
-    return db_model.get_strategy_statistics(strategy)
+        return f'Error: {e}'
 
 @strategy_blueprint.route('/get_strategy_pnl')
 def get_strategy_pnl():
@@ -180,11 +180,7 @@ def get_strategy_pnl():
     """
     try:
         strategy = request.args.get('strategy')
-    except Exception as e:
-        strategy = 'BullBreakout'
-    
-    json_data = db_model.get_strategy_pnl(strategy)
-    try:
+        json_data = db_model.get_strategy_pnl(strategy)
         df = pd.DataFrame(json_data)
         df['Date'] = pd.to_datetime(df['Date'])
         df = df.set_index('Date')
@@ -195,8 +191,8 @@ def get_strategy_pnl():
         json_data = []
         for entry in df.values:
             json_data.append(dict(zip(col_headers, entry)))
-    except:
-        return 'Error: Incorrectly formatted JSON data'
+    except Exception as e:
+        return f'Error: {e}'
         
     # Error with pd.Dataframe - need to pass a list of lists not a list of dicts
     return json_data
