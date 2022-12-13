@@ -114,30 +114,32 @@ class DBModel():
         Sharpe: <Cumulative Sharpe Ratio of Strategy>
         ---------------------------------------
         """
-        strategy_pnl_json = self.get_strategy_pnl(strategy)
+        try:
+            strategy_pnl_json = self.get_strategy_pnl(strategy)
+        except Exception as e:
+            return f'Error retrieving strategy information: {e}'
         try:
             df = pd.DataFrame(strategy_pnl_json)
+            cum_pnl = df['PNL'].sum()
+            ytd_pnl = df[df['Date'] >= datetime.now().replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)].sum()['PNL']
+            avg_annual_return = (cum_pnl / df['PNL'].count()) * 252
+            avg_daily_return = (cum_pnl / df['PNL'].count())
+            avg_trades_per_day = df['PNL'].count() / (df['Date'].max() - df['Date'].min()).days
+            sharpe = cum_pnl / df['PNL'].std()
+        
+            r_json = {
+                'cumulative_pnl': round(cum_pnl, 2),
+                'ytd_pnl': round(ytd_pnl, 2),
+                'avg_annual_return': round(avg_annual_return, 2),
+                'avg_daily_return': round(avg_daily_return, 2),
+                'avg_daily_trades': round(avg_trades_per_day, 2),
+                'sharpe': round(sharpe, 2)
+            }
+
+            return r_json
         except Exception as e:
             return f'Error converting strategy information to JSON: {e}'
         
-        cum_pnl = df['PNL'].sum()
-        ytd_pnl = df[df['Date'] >= datetime.now().replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)].sum()['PNL']
-        avg_annual_return = (cum_pnl / df['PNL'].count()) * 252
-        avg_daily_return = (cum_pnl / df['PNL'].count())
-        avg_trades_per_day = df['PNL'].count() / (df['Date'].max() - df['Date'].min()).days
-        sharpe = cum_pnl / df['PNL'].std()
-        
-        r_json = {
-            'cumulative_pnl': round(cum_pnl, 2),
-            'ytd_pnl': round(ytd_pnl, 2),
-            'avg_annual_return': round(avg_annual_return, 2),
-            'avg_daily_return': round(avg_daily_return, 2),
-            'avg_daily_trades': round(avg_trades_per_day, 2),
-            'sharpe': round(sharpe, 2)
-        }
-
-        return r_json
-
 
     ### STRAGEGY PAGE ###
 
