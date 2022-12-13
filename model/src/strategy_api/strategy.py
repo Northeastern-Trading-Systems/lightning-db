@@ -19,9 +19,13 @@ def get_active_strategies():
     Returns all attributes of the strategy table.
     """
     json_data = db_model.get_active_strategies()
-    # remove all of the documentation_link and termination_date fields from the json_data
-    for i in range(len(json_data)):
-        del json_data[i]['termination_date']
+    try:
+        # remove all of the documentation_link and termination_date fields from the json_data
+        for i in range(len(json_data)):
+            del json_data[i]['termination_date']
+    except Exception as e:
+        return f'Error: {e}'
+
     return json_data
 
 @strategy_blueprint.route('/get_daily_pnl')
@@ -73,23 +77,27 @@ def get_strategy_status():
     (?) Error Status: <Count of Errors on Error Log>
     ---------------------------------------
     """
-    strategy = request.args.get('strategy')
-    strategy_info = db_model.get_strategy_info(strategy)
-    s_name = strategy
-    s_id = strategy_info[0]['strategy_id']
-    s_running_on = 'unknown'
+    try:
+        strategy = request.args.get('strategy')
+        strategy_info = db_model.get_strategy_info(strategy)
+        s_name = strategy
+        s_id = strategy_info[0]['strategy_id']
+        s_running_on = 'unknown'
 
-    trades = db_model.get_open_trades(strategy)
-    s_active_trades = len(trades)
-    s_capital_usage = 0
-    for i in range(len(trades)):
-        s_capital_usage += trades[i]['capital_usage']
+        trades = db_model.get_open_trades(strategy)
+        s_active_trades = len(trades)
+        s_capital_usage = 0
+        for i in range(len(trades)):
+            s_capital_usage += trades[i]['capital_usage']
 
-    return jsonify(strategy_name=s_name,
-     strategy_id=s_id,
-      active_trades=s_active_trades,
-       capital_usage=s_capital_usage,
-        running_on=s_running_on)
+        return jsonify(strategy_name=s_name,
+        strategy_id=s_id,
+        active_trades=s_active_trades,
+        capital_usage=s_capital_usage,
+            running_on=s_running_on)
+    
+    except Exception as e:
+        return f'Error: {e}'
 
 @strategy_blueprint.route('/get_strategy_hist_trades')
 def get_strategy_hist_trades():
@@ -103,12 +111,15 @@ def get_strategy_hist_trades():
          - Returns a JSON of all historical trades and their corresponding attributes for the last 6 calendar months from the LongGME strategy.
          - JSON is inclusive of the current calendar day but exclusive of all open trades (not historical)
     """
-    strategy = request.args.get('strategy')
-    lookback = request.args.get('lookback')
-    # Potentially convert the type to an integer
-    if type(lookback) == str: lookback = int(lookback)
+    try:
+        strategy = request.args.get('strategy')
+        lookback = request.args.get('lookback')
+        # Potentially convert the type to an integer
+        if type(lookback) == str: lookback = int(lookback)
 
-    return db_model.get_historical_trades(strategy, lookback)
+        return db_model.get_historical_trades(strategy, lookback)
+    except Exception as e:
+        return f'Error: {e}'
 
 @strategy_blueprint.route('/get_strategy_open_trades')
 def get_strategy_open_trades():
@@ -121,9 +132,12 @@ def get_strategy_open_trades():
          - Returns a JSON of all open trades and their corresponding attributes from the LunchBreakReversion strategy. 
          - JSON is inclusive of every trade that has a non-zero net open value (aggregate qty of all legs != 0)
     """
-    strategy = request.args.get('strategy')
+    try:
+        strategy = request.args.get('strategy')
 
-    return db_model.get_open_trades(strategy)
+        return db_model.get_open_trades(strategy)
+    except Exception as e:
+        return f'Error: {e}'
 
 
 @strategy_blueprint.route('/get_strategy_statistics')
@@ -141,9 +155,13 @@ def get_strategy_statistics():
     Sharpe: <Cumulative Sharpe Ratio of Strategy>
     ---------------------------------------
     """
-    strategy = request.args.get('strategy')
+    try:
+        strategy = request.args.get('strategy')
 
-    return db_model.get_strategy_statistics(strategy)
+        return db_model.get_strategy_statistics(strategy)
+    
+    except Exception as e:
+        return f'Error: {e}'
 
 @strategy_blueprint.route('/get_strategy_pnl')
 def get_strategy_pnl():
@@ -157,22 +175,25 @@ def get_strategy_pnl():
     }
     ---------------------------------------
     """
-    strategy = request.args.get('strategy')
-    json_data = db_model.get_strategy_pnl(strategy)
     try:
-        df = pd.DataFrame(json_data)
-        df['Date'] = pd.to_datetime(df['Date'])
-        df = df.set_index('Date')
-        df = df.groupby(pd.Grouper(freq='D')).sum()
-        df = df.reset_index()
-        df['Date'] = df['Date'].dt.strftime('%Y-%m-%d')
-        col_headers = [x for x in df.columns]
-        json_data = []
-        for entry in df.values:
-            json_data.append(dict(zip(col_headers, entry)))
-    except:
-        return 'Error: Incorrectly formatted JSON data'
-    
-    # Error with pd.Dataframe - need to pass a list of lists not a list of dicts
+        strategy = request.args.get('strategy')
+        json_data = db_model.get_strategy_pnl(strategy)
+        try:
+            df = pd.DataFrame(json_data)
+            df['Date'] = pd.to_datetime(df['Date'])
+            df = df.set_index('Date')
+            df = df.groupby(pd.Grouper(freq='D')).sum()
+            df = df.reset_index()
+            df['Date'] = df['Date'].dt.strftime('%Y-%m-%d')
+            col_headers = [x for x in df.columns]
+            json_data = []
+            for entry in df.values:
+                json_data.append(dict(zip(col_headers, entry)))
+        except:
+            return 'Error: Incorrectly formatted JSON data'
+        
+        # Error with pd.Dataframe - need to pass a list of lists not a list of dicts
 
-    return json_data
+        return json_data
+    except Exception as e:
+        return f'Error: {e}'
