@@ -54,21 +54,25 @@ def get_strategy_status():
     ---------------------------------------
     """
     try:
+        # BREAKPOINT!!
         strategy = request.args.get('strategy')
-    except Exception as e:
-        strategy = 'BullBreakout'
-    
-    try:
         strategy_info = db_model.get_strategy_info(strategy)
         s_name = strategy
-        s_id = strategy_info[0]['strategy_id']
+        try:
+            s_id = strategy_info[0]['strategy_id']
+        except Exception as e:
+            s_id = 0
         s_running_on = 'unknown'
 
         trades = db_model.get_open_trades(strategy)
         s_active_trades = len(trades)
         s_capital_usage = 0
-        for i in range(len(trades)):
-            s_capital_usage += trades[i]['capital_usage']
+        # BREAKPOINT!!
+        try:
+            for i in range(len(trades)):
+                s_capital_usage += trades[i]['capital_usage']
+        except Exception as e:
+            s_capital_usage = 0
 
         return jsonify(strategy_name=s_name,
         strategy_id=s_id,
