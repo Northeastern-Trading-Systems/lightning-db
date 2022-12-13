@@ -45,7 +45,9 @@ def get_daily_pnl():
     df = df.set_index('Date')
     df = df.groupby(pd.Grouper(freq='D')).sum()
     df = df.reset_index()
+    df['Date'] = df['Date'].dt.strftime('%Y-%m-%d')
     json_data = df.to_json(orient='records')
+
     return json_data
 
 ### STRATEGY PAGE ###
