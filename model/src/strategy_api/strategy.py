@@ -37,18 +37,21 @@ def get_daily_pnl():
     ---------------------------------------
     """
     json_data = db_model.get_daily_pnl()
-    df = pd.DataFrame(json_data)
-
-    # Group the open_time by day
-    df['Date'] = pd.to_datetime(df['Date'])
-    df = df.set_index('Date')
-    df = df.groupby(pd.Grouper(freq='D')).sum()
-    df = df.reset_index()
-    df['Date'] = df['Date'].dt.strftime('%Y-%m-%d')
-    col_headers = [x for x in df.columns]
-    json_data = []
-    for entry in df.values:
-        json_data.append(dict(zip(col_headers, entry)))
+    try:
+        df = pd.DataFrame(json_data)
+        df['Date'] = pd.to_datetime(df['Date'])
+        df = df.set_index('Date')
+        df = df.groupby(pd.Grouper(freq='D')).sum()
+        df = df.reset_index()
+        df['Date'] = df['Date'].dt.strftime('%Y-%m-%d')
+        col_headers = [x for x in df.columns]
+        json_data = []
+        for entry in df.values:
+            json_data.append(dict(zip(col_headers, entry)))
+    except:
+        return 'Error: Incorrectly formatted JSON data'
+    
+    # Error with pd.Dataframe - need to pass a list of lists not a list of dicts
 
     return json_data
 
@@ -88,38 +91,6 @@ def get_strategy_status():
        capital_usage=s_capital_usage,
         running_on=s_running_on)
 
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-@strategy_blueprint.route('/get_strategy_statistics/<strategy>')
-def get_strategy_statistics(strategy):
-    """
-    Method to get a strategy's performance stats. Stats will be exclusive of all open trades.
-    Output will come in the format:
-    ---------------------------------------
-    <Strategy Name>
-    Cumulative P/L: <Overall P/L of strategy>
-    YTD P/L: <Cululative P/L since Jan 1, (curYear)>
-    Average Annual % Return: <Average Anualized Rate of Return (calendar days)>
-    Average Daily % Return: <Average Daily Rate of Return (trading days)>
-    Average Trades per Day: <Average Count of Trades per Day (trading days)>
-    Sharpe: <Cumulative Sharpe Ratio of Strategy>
-    Launch Date: <First Date of Live Trading>
-    ---------------------------------------
-    """
-    pass
-
 @strategy_blueprint.route('/get_strategy_hist_trades')
 def get_strategy_hist_trades():
     """
@@ -151,6 +122,57 @@ def get_strategy_open_trades():
          - JSON is inclusive of every trade that has a non-zero net open value (aggregate qty of all legs != 0)
     """
     strategy = request.args.get('strategy')
-    
+
     return db_model.get_open_trades(strategy)
 
+
+@strategy_blueprint.route('/get_strategy_statistics')
+def get_strategy_statistics():
+    """
+    Method to get a strategy's performance stats. Stats will be exclusive of all open trades.
+    Output will come in the format:
+    ---------------------------------------
+    <Strategy Name>
+    Cumulative P/L: <Overall P/L of strategy>
+    YTD P/L: <Cululative P/L since Jan 1, (curYear)>
+    Average Annual % Return: <Average Anualized Rate of Return (calendar days)>
+    Average Daily % Return: <Average Daily Rate of Return (trading days)>
+    Average Trades per Day: <Average Count of Trades per Day (trading days)>
+    Sharpe: <Cumulative Sharpe Ratio of Strategy>
+    ---------------------------------------
+    """
+    strategy = request.args.get('strategy')
+
+    return db_model.get_strategy_statistics(strategy)
+
+@strategy_blueprint.route('/get_strategy_pnl')
+def get_strategy_pnl():
+    """
+    Method to get all daily P&L across the entire strategy through all time.
+    Returns a JSON of the following format:
+    ---------------------------------------
+    {
+        "Date": <Date>,
+        "P&L": <P&L on Date>
+    }
+    ---------------------------------------
+    """
+    strategy = request.args.get('strategy')
+    json_data = db_model.get_strategy_pnl(strategy)
+    try:
+        df = pd.DataFrame(json_data)
+        df['Date'] = pd.to_datetime(df['Date'])
+        df = df.set_index('Date')
+        df = df.groupby(pd.Grouper(freq='D')).sum()
+        df = df.reset_index()
+        df['Date'] = df['Date'].dt.strftime('%Y-%m-%d')
+        col_headers = [x for x in df.columns]
+        json_data = []
+        for entry in df.values:
+            json_data.append(dict(zip(col_headers, entry)))
+    except:
+        return 'Error: Incorrectly formatted JSON data'
+    
+    # Error with pd.Dataframe - need to pass a list of lists not a list of dicts
+
+    return json_data
