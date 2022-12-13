@@ -65,7 +65,22 @@ class DBModel():
         the_data = self.cur.fetchall()
         for row in the_data:
             json_data.append(dict(zip(col_headers, row)))
-        return json_data
+        try:
+            json_data_c = json_data.copy()
+            # Error with pd.Dataframe - need to pass a list of lists not a list of dicts
+            df = pd.DataFrame(json_data_c)
+            df['Date'] = pd.to_datetime(df['Date'])
+            df = df.set_index('Date')
+            df = df.groupby(pd.Grouper(freq='D')).sum()
+            df = df.reset_index()
+            df['Date'] = df['Date'].dt.strftime('%Y-%m-%d')
+            col_headers = [x for x in df.columns]
+            json_data2 = []
+            for entry in df.values:
+                json_data2.append(dict(zip(col_headers, entry)))
+            return json_data2
+        except:
+            return json_data
 
     def get_active_strategies(self):
         """

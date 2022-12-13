@@ -18,15 +18,7 @@ def get_active_strategies():
     Method to get a list of all active strategies. An active strategy is defined as one that is currently running on an EC2.
     Returns all attributes of the strategy table.
     """
-    json_data = db_model.get_active_strategies()
-    try:
-        # remove all of the documentation_link and termination_date fields from the json_data
-        for i in range(len(json_data)):
-            del json_data[i]['termination_date']
-    except Exception as e:
-        return f'Error: {e}'
-
-    return json_data
+    return db_model.get_active_strategies()
 
 @strategy_blueprint.route('/get_daily_pnl')
 def get_daily_pnl():
@@ -40,24 +32,8 @@ def get_daily_pnl():
     }
     ---------------------------------------
     """
-    json_data = db_model.get_daily_pnl()
-    try:
-        df = pd.DataFrame(json_data)
-        df['Date'] = pd.to_datetime(df['Date'])
-        df = df.set_index('Date')
-        df = df.groupby(pd.Grouper(freq='D')).sum()
-        df = df.reset_index()
-        df['Date'] = df['Date'].dt.strftime('%Y-%m-%d')
-        col_headers = [x for x in df.columns]
-        json_data = []
-        for entry in df.values:
-            json_data.append(dict(zip(col_headers, entry)))
-    except:
-        return 'Error: Incorrectly formatted JSON data'
-    
-    # Error with pd.Dataframe - need to pass a list of lists not a list of dicts
 
-    return json_data
+    return db_model.get_daily_pnl()
 
 ### STRATEGY PAGE ###
 
