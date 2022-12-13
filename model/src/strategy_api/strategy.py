@@ -54,7 +54,7 @@ def get_daily_pnl():
 
 ### STRATEGY PAGE ###
 
-@strategy_blueprint.route('/get_strategy_status?Strategy=<strategy>')
+@strategy_blueprint.route('/get_strategy_status/<strategy>')
 def get_strategy_status(strategy):
     """
     Method to get the current status of a strategy. The status represents a snapshot of the strategy's current state.
