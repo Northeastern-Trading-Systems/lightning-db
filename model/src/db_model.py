@@ -41,6 +41,29 @@ class DBModel():
             json_data.append(dict(zip(col_headers, row)))
         return json_data
     
+    def get_daily_pnl(self):
+        """
+        Method to get all daily P&L across the entire portfolio. Data requires further cleaning in the strategy api method.
+        """
+        try:
+            self.cur.execute("""
+                Select trade.open_time as Date, sum(fill.qty * fill.avg) * -1 as pnl
+                from trade
+                join trade_leg on trade.trade_id = trade_leg.trade_id
+                join fill on trade_leg.leg_no = fill.leg_no and trade_leg.trade_id = fill.trade_id
+                group by trade.open_time
+                order by trade.open_time;
+                """)
+        except Exception as e:
+            return f'Error retrieving strategy information: {e}'
+
+        col_headers = [x[0] for x in self.cur.description]
+        json_data = []
+        the_data = self.cur.fetchall()
+        for row in the_data:
+            json_data.append(dict(zip(col_headers, row)))
+        return json_data
+    
     def get_active_strategies(self):
         """
         Get a list of all active strategies. An active strategy is defined as one that is currently running on an EC2.

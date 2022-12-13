@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify
 from src import db
 from src.db_model import DBModel
+import pandas as pd
 
 strategy_blueprint = Blueprint('strategy_blueprint', __name__)
 
@@ -17,7 +18,35 @@ def get_active_strategies():
     Method to get a list of all active strategies. An active strategy is defined as one that is currently running on an EC2.
     Returns all attributes of the strategy table.
     """
-    return db_model.get_active_strategies()
+    json_data = db_model.get_active_strategies()
+    # remove all of the documentation_link and termination_date fields from the json_data
+    for i in range(len(json_data)):
+        del json_data[i]['documentation_link']
+        del json_data[i]['termination_date']
+    return json_data
+
+@strategy_blueprint.route('/get_daily_pnl')
+def get_daily_pnl():
+    """
+    Method to get all daily P&L across the entire portfolio.
+    Returns a JSON of the following format:
+    ---------------------------------------
+    {
+        "Date": <Date>,
+        "P&L": <P&L on Date>
+    }
+    ---------------------------------------
+    """
+    json_data = db_model.get_daily_pnl()
+    df = pd.DataFrame(json_data)
+
+    # Group the open_time by day
+    df['Date'] = pd.to_datetime(df['Date'])
+    df = df.set_index('Date')
+    df = df.groupby(pd.Grouper(freq='D')).sum()
+    df = df.reset_index()
+    json_data = df.to_json(orient='records')
+    return json_data
 
 ### STRATEGY PAGE ###
 
