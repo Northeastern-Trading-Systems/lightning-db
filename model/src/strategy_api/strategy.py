@@ -13,15 +13,19 @@ db_model = DBModel()
 ### HOME PAGE ###
 
 @strategy_blueprint.route('/get_active_strategies')
-def get_active_strategies():
+def get_active_strategies():  # <-- Status: Passing All Tests
     """
     Method to get a list of all active strategies. An active strategy is defined as one that is currently running on an EC2.
     Returns all attributes of the strategy table.
     """
-    return db_model.get_active_strategies()
+    try:
+        acts = db_model.get_active_strategies()
+        return acts
+    except Exception as e:
+        return f'Error: {e}'
 
 @strategy_blueprint.route('/get_daily_pnl')
-def get_daily_pnl():
+def get_daily_pnl():  # <-- Status: Passing All Tests
     """
     Method to get all daily P&L across the entire portfolio.
     Returns a JSON of the following format:
@@ -32,13 +36,16 @@ def get_daily_pnl():
     }
     ---------------------------------------
     """
-
-    return db_model.get_daily_pnl()
+    try:
+        dpnl = db_model.get_daily_pnl()
+        return dpnl
+    except Exception as e:
+        return f'Error: {e}'
 
 ### STRATEGY PAGE ###
 
 @strategy_blueprint.route('/get_strategy_status')
-def get_strategy_status():
+def get_strategy_status():  # <-- Status: Passing All Tests
     """
     Method to get the current status of a strategy. The status represents a snapshot of the strategy's current state.
     Output will come in the format:
@@ -53,38 +60,45 @@ def get_strategy_status():
     (?) Error Status: <Count of Errors on Error Log>
     ---------------------------------------
     """
+    # Get the strategy from the request
     try:
-        # BREAKPOINT!!
         strategy = request.args.get('strategy')
+        if strategy == '' or strategy == None: 
+            return 'Error: No strategy specified'
+    except Exception as e:
+        return f'Error: {e}'
+
+    # Get the strategy info and open trades from the DB
+    try:
         strategy_info = db_model.get_strategy_info(strategy)
-        s_name = strategy
-        try:
-            s_id = strategy_info[0]['strategy_id']
-        except Exception as e:
-            s_id = 0
-        s_running_on = 'unknown'
-
-        trades = db_model.get_open_trades(strategy)
-        s_active_trades = len(trades)
+        open_trades = db_model.get_open_trades(strategy)
+    except Exception as e:
+        return f'Error retrieving Database Model strategy information: {e}'
+    
+    # Get variables for the return JSON
+    s_name = strategy
+    try:
+        s_id = strategy_info[0]['strategy_id']
+    except Exception as e:
+        s_id = 0
+    s_running_on = 'unknown'
+    s_capital_usage = 0
+    try:
+        for i in range(len(open_trades)):
+            s_capital_usage += open_trades[i]['capital_usage']
+    except Exception as e:
         s_capital_usage = 0
-        # BREAKPOINT!!
-        try:
-            for i in range(len(trades)):
-                s_capital_usage += trades[i]['capital_usage']
-        except Exception as e:
-            s_capital_usage = 0
+    s_active_trades = len(open_trades)
 
-        return jsonify(strategy_name=s_name,
+    # Format and return as a JSON
+    return jsonify(strategy_name=s_name,
         strategy_id=s_id,
         active_trades=s_active_trades,
         capital_usage=s_capital_usage,
             running_on=s_running_on)
-    
-    except Exception as e:
-        return f'Error: {e}'
 
 @strategy_blueprint.route('/get_strategy_hist_trades')
-def get_strategy_hist_trades():
+def get_strategy_hist_trades():  # <-- Status: Passing All Tests
     """
     Gets all historical trades information from the specified strategy to the specified number of lookback months, where...
     Strategy: Name of the strategy to get historical trade information from
@@ -106,7 +120,7 @@ def get_strategy_hist_trades():
         return f'Error: {e}'
 
 @strategy_blueprint.route('/get_strategy_open_trades')
-def get_strategy_open_trades():
+def get_strategy_open_trades():  # <-- Status: Passing All Tests
     """
     Gets all open trades information from the specified strategy, where...
     Strategy: Name of the strategy to get historical trade information from
@@ -139,10 +153,17 @@ def get_strategy_statistics():
     Sharpe: <Cumulative Sharpe Ratio of Strategy>
     ---------------------------------------
     """
-
+    # Get the strategy from the request
     try:
         strategy = request.args.get('strategy')
-        return db_model.get_strategy_statistics(strategy)
+        if db_model.strategy_exists(strategy) == False:
+            return f'Error: Strategy {strategy} does not exist.'
+    except Exception as e:
+        return f'Error: {e}'
+
+    try:
+        stats = db_model.get_strategy_statistics(strategy)
+        return stats
     except Exception as e:
         return f'Error: {e}'
 
@@ -158,9 +179,22 @@ def get_strategy_pnl():
     }
     ---------------------------------------
     """
+    # First, get the strategy from the request
     try:
         strategy = request.args.get('strategy')
+        if db_model.strategy_exists(strategy) == False:
+            return f'Error: Strategy {strategy} does not exist.'
+    except Exception as e:
+        return f'Error: {e}'
+
+    # Next, get the P&L from the DB
+    try:
         json_data = db_model.get_strategy_pnl(strategy)
+    except Exception as e:
+        return f'Error getting Strategy PNL: {e}'
+
+    # Lastly, convert the JSON to a dataframe and perform the necessary data manipulation.
+    try:
         df = pd.DataFrame(json_data)
         df['Date'] = pd.to_datetime(df['Date'])
         df = df.set_index('Date')
@@ -172,7 +206,7 @@ def get_strategy_pnl():
         for entry in df.values:
             json_data.append(dict(zip(col_headers, entry)))
     except Exception as e:
-        return f'Error: {e}'
+        return f'Error converting JSON data to a DataFrame: {e}'
         
     # Error with pd.Dataframe - need to pass a list of lists not a list of dicts
     return json_data

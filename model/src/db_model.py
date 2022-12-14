@@ -114,16 +114,22 @@ class DBModel():
         Sharpe: <Cumulative Sharpe Ratio of Strategy>
         ---------------------------------------
         """
+        
+        # First, get the pnl information for statistics
         try:
             strategy_pnl_json = self.get_strategy_pnl(strategy)
         except Exception as e:
             return f'Error retrieving strategy information: {e}'
+
+        # Now, calculate the statistics
         try:
             df = pd.DataFrame(strategy_pnl_json)
             cum_pnl = df['PNL'].sum()
             ytd_pnl = df[df['Date'] >= datetime.now().replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)].sum()['PNL']
-            avg_annual_return = (cum_pnl / df['PNL'].count()) * 252
-            avg_daily_return = (cum_pnl / df['PNL'].count())
+            days = (df['Date'].max() - df['Date'].min()).days
+            years = (df['Date'].max() - df['Date'].min()).days / 365
+            avg_annual_return = (cum_pnl / years)
+            avg_daily_return = (cum_pnl / days)
             avg_trades_per_day = df['PNL'].count() / (df['Date'].max() - df['Date'].min()).days
             sharpe = cum_pnl / df['PNL'].std()
         
@@ -139,7 +145,6 @@ class DBModel():
             return r_json
         except Exception as e:
             return f'Error converting strategy information to JSON: {e}'
-        
 
     ### STRAGEGY PAGE ###
 
@@ -147,6 +152,8 @@ class DBModel():
         """
         Method to get all daily P&L across the life of a strategy. Data requires further cleaning in the strategy api method.
         """
+        
+        # Next, get the pnl information
         try:
             self.cur.execute(f"""
                 Select trade.open_time as Date, sum(fill.qty * fill.avg) * -1 as PNL
@@ -269,7 +276,6 @@ class DBModel():
 
     ### DATA EXPLORER PAGE ###
 
-    
     def get_trade_info(self, trade_id: int):
         # TODO: FIX THIS SQL QUERY
         """
@@ -414,4 +420,19 @@ class DBModel():
             json_data.append(dict(zip(col_headers, row)))
         return json_data
 
-    
+    ### HELPERS ###
+
+    def strategy_exists(self, strategy: str):
+        """
+        Method to check if a strategy exists in the database.
+        Returns True if the strategy exists, False otherwise.
+        """
+        if strategy == None or strategy == '' or strategy == ' ':
+            return False
+
+        try:
+            self.cur.execute(f'select * from strategy where strategy_name = "{strategy}"')
+        except Exception as e:
+            return False
+
+        return len(self.cur.fetchall()) != 0
