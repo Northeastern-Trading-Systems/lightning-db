@@ -16,11 +16,15 @@ def create_app():
     app.config['SECRET_KEY'] = SECRET_KEY
     
     # Import the various routes
-    from src.strategy_api.strategy import strategy_blueprint
+    from src.api.strategy_api import strategy_blueprint
+    from src.api.portfolio_api import portfolio_blueprint
+    from src.api.rm_api import rm_blueprint
     from src.views import views_blueprint
 
     # Register the routes that we just imported so they can be properly handled
     app.register_blueprint(strategy_blueprint,       url_prefix='/strategy')
+    app.register_blueprint(portfolio_blueprint,       url_prefix='/port')
+    app.register_blueprint(rm_blueprint,       url_prefix='/rm')
     app.register_blueprint(views_blueprint,          url_prefix='/')
 
     return app

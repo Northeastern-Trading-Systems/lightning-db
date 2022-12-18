@@ -10,6 +10,7 @@ CREATE TABLE strategy (
     strategy_name varchar(50),
     strategy_id integer AUTO_INCREMENT NOT NULL,
     documentation_link varchar(50),
+    host_link varchar(50),
     launch_date datetime,
     termination_date datetime,
     PRIMARY KEY (strategy_id)
@@ -53,6 +54,7 @@ CREATE TABLE fill (
     avg float(32),
     placement_time datetime,
     filled_time datetime,
+    brokerage varchar(50),
     PRIMARY KEY (fill_id),
     CONSTRAINT fk_3
         FOREIGN KEY (leg_no, trade_id) REFERENCES trade_leg (leg_no, trade_id)

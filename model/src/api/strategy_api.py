@@ -7,42 +7,11 @@ strategy_blueprint = Blueprint('strategy_blueprint', __name__)
 
 db_model = DBModel()
 
-# TODO: Make generalized SQL methods in a sql-model file
-# TODO: Redo endpoints to hit DB and do logic in python, returning as a JSON
+"""
+Strategy Page:
 
-### HOME PAGE ###
-
-@strategy_blueprint.route('/get_active_strategies')
-def get_active_strategies():  # <-- Status: Passing All Tests
-    """
-    Method to get a list of all active strategies. An active strategy is defined as one that is currently running on an EC2.
-    Returns all attributes of the strategy table.
-    """
-    try:
-        acts = db_model.get_active_strategies()
-        return acts
-    except Exception as e:
-        return f'Error: {e}'
-
-@strategy_blueprint.route('/get_daily_pnl')
-def get_daily_pnl():  # <-- Status: Passing All Tests
-    """
-    Method to get all daily P&L across the entire portfolio.
-    Returns a JSON of the following format:
-    ---------------------------------------
-    {
-        "Date": <Date>,
-        "P&L": <P&L on Date>
-    }
-    ---------------------------------------
-    """
-    try:
-        dpnl = db_model.get_daily_pnl()
-        return dpnl
-    except Exception as e:
-        return f'Error: {e}'
-
-### STRATEGY PAGE ###
+Stores all routes to get information about specific strategies.
+"""
 
 @strategy_blueprint.route('/get_strategy_status')
 def get_strategy_status():  # <-- Status: Passing All Tests
@@ -97,6 +66,35 @@ def get_strategy_status():  # <-- Status: Passing All Tests
         capital_usage=s_capital_usage,
             running_on=s_running_on)
 
+@strategy_blueprint.route('/get_strategy_statistics')
+def get_strategy_statistics():  # <-- Status: Passing All Tests
+    """
+    Method to get a strategy's performance stats. Stats will be exclusive of all open trades.
+    Output will come in the format:
+    ---------------------------------------
+    <Strategy Name>
+    Cumulative P/L: <Overall P/L of strategy>
+    YTD P/L: <Cululative P/L since Jan 1, (curYear)>
+    Average Annual % Return: <Average Anualized Rate of Return (calendar days)>
+    Average Daily % Return: <Average Daily Rate of Return (trading days)>
+    Average Trades per Day: <Average Count of Trades per Day (trading days)>
+    Sharpe: <Cumulative Sharpe Ratio of Strategy>
+    ---------------------------------------
+    """
+    # Get the strategy from the request
+    try:
+        strategy = request.args.get('strategy')
+        if db_model.strategy_exists(strategy) == False:
+            return f'Error: Strategy {strategy} does not exist.'
+    except Exception as e:
+        return f'Error: {e}'
+
+    try:
+        stats = db_model.get_strategy_statistics(strategy)
+        return stats
+    except Exception as e:
+        return f'Error: {e}'
+
 @strategy_blueprint.route('/get_strategy_hist_trades')
 def get_strategy_hist_trades():  # <-- Status: Passing All Tests
     """
@@ -137,38 +135,8 @@ def get_strategy_open_trades():  # <-- Status: Passing All Tests
     except Exception as e:
         return f'Error: {e}'
 
-
-@strategy_blueprint.route('/get_strategy_statistics')
-def get_strategy_statistics():
-    """
-    Method to get a strategy's performance stats. Stats will be exclusive of all open trades.
-    Output will come in the format:
-    ---------------------------------------
-    <Strategy Name>
-    Cumulative P/L: <Overall P/L of strategy>
-    YTD P/L: <Cululative P/L since Jan 1, (curYear)>
-    Average Annual % Return: <Average Anualized Rate of Return (calendar days)>
-    Average Daily % Return: <Average Daily Rate of Return (trading days)>
-    Average Trades per Day: <Average Count of Trades per Day (trading days)>
-    Sharpe: <Cumulative Sharpe Ratio of Strategy>
-    ---------------------------------------
-    """
-    # Get the strategy from the request
-    try:
-        strategy = request.args.get('strategy')
-        if db_model.strategy_exists(strategy) == False:
-            return f'Error: Strategy {strategy} does not exist.'
-    except Exception as e:
-        return f'Error: {e}'
-
-    try:
-        stats = db_model.get_strategy_statistics(strategy)
-        return stats
-    except Exception as e:
-        return f'Error: {e}'
-
 @strategy_blueprint.route('/get_strategy_pnl')
-def get_strategy_pnl():
+def get_strategy_pnl():  # <-- Status: Passing All Tests
     """
     Method to get all daily P&L across the entire strategy through all time.
     Returns a JSON of the following format:

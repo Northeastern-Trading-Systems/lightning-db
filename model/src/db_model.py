@@ -5,6 +5,10 @@ from dateutil.relativedelta import relativedelta
 import pandas as pd
 
 class DBModel():
+    """
+    Model for methods that interface with the database connection.
+    Deployment: AWS RDS: MySQL
+    """
     def __init__(self):
         self.cur = db.cursor()
 
