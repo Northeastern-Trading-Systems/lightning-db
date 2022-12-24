@@ -4,3 +4,6 @@ flask-login==0.6.2
 flask-mysql==1.5.2
 cryptography==38.0.1
 pymysql
+flask-cors
+python-dateutil
+pandas

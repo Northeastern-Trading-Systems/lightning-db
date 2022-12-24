@@ -1,6 +1,7 @@
 # Some set up for the application 
 
 from flask import Flask
+from flask_cors import CORS
 import pymysql
 from config import *
 
@@ -9,6 +10,7 @@ db = pymysql.connect(host=RDS_HOSTNAME, user=RDS_USER, password=RDS_PASSWORD, da
 
 def create_app():
     app = Flask(__name__)
+    CORS(app)
     
     # secret key that will be used for securely signing the session 
     # cookie and can be used for any other security related needs by 
