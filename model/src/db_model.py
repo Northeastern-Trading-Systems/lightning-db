@@ -1,4 +1,5 @@
 # imports
+from flask import make_response
 from src import db
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
@@ -39,14 +40,14 @@ class DBModel():
             else:
                 self.cur.execute(f'select * from strategy where strategy_name = "{strategy}"')
         except Exception as e:
-            return f'Error retrieving strategy information: {e}'
+            return make_response(f'Error retrieving strategy information: {e}', 500)
 
         col_headers = [x[0] for x in self.cur.description]
         json_data = []
         the_data = self.cur.fetchall()
         for row in the_data:
             json_data.append(dict(zip(col_headers, row)))
-        return json_data
+        return make_response(json_data, 200)
     
     def get_daily_pnl(self):
         """
@@ -62,7 +63,7 @@ class DBModel():
                 order by trade.open_time;
                 """)
         except Exception as e:
-            return f'Error retrieving strategy information: {e}'
+            return make_response(f'Error retrieving strategy information: {e}', 500)
 
         col_headers = [x[0] for x in self.cur.description]
         json_data = []
@@ -82,9 +83,9 @@ class DBModel():
             json_data2 = []
             for entry in df.values:
                 json_data2.append(dict(zip(col_headers, entry)))
-            return json_data2
+            return make_response(json_data2, 200)
         except:
-            return json_data
+            return make_response(json_data, 200)
 
     def get_active_strategies(self):
         """
@@ -95,14 +96,14 @@ class DBModel():
         try:
             self.cur.execute(f'select * from strategy where termination_date is null')
         except Exception as e:
-            return f'Error retrieving strategy information: {e}'
+            return make_response(f'Error retrieving strategy information: {e}', 500)
 
         col_headers = [x[0] for x in self.cur.description]
         json_data = []
         the_data = self.cur.fetchall()
         for row in the_data:
             json_data.append(dict(zip(col_headers, row)))
-        return json_data
+        return make_response(json_data, 200)
 
     def get_strategy_statistics(self, strategy):
         """
@@ -123,7 +124,7 @@ class DBModel():
         try:
             strategy_pnl_json = self.get_strategy_pnl(strategy)
         except Exception as e:
-            return f'Error retrieving strategy information: {e}'
+            return make_response(f'Error retrieving strategy information: {e}', 500)
 
         # Now, calculate the statistics
         try:
@@ -146,9 +147,9 @@ class DBModel():
                 'sharpe': round(sharpe, 2)
             }
 
-            return r_json
+            return make_response(r_json, 200)
         except Exception as e:
-            return f'Error converting strategy information to JSON: {e}'
+            return make_response(f'Error converting strategy information to JSON: {e}', 500)
 
     ### STRAGEGY PAGE ###
 
@@ -170,14 +171,14 @@ class DBModel():
                 order by trade.open_time;
                 """)
         except Exception as e:
-            return f'Error retrieving strategy information: {e}'
+            return make_response(f'Error retrieving strategy information: {e}', 500)
 
         col_headers = [x[0] for x in self.cur.description]
         json_data = []
         the_data = self.cur.fetchall()
         for row in the_data:
             json_data.append(dict(zip(col_headers, row)))
-        return json_data
+        return make_response(json_data, 200)
 
     def get_open_trades(self, strategy: str):
         """
@@ -233,14 +234,14 @@ class DBModel():
                 order by trade.open_time;
                 """)
         except Exception as e:
-            return f'Error retrieving open trades: {e}'
+            return make_response(f'Error retrieving open trades: {e}', 500)
 
         col_headers = [x[0] for x in self.cur.description]
         json_data = []
         the_data = self.cur.fetchall()
         for row in the_data:
             json_data.append(dict(zip(col_headers, row)))
-        return json_data
+        return make_response(json_data, 200)
 
     def get_historical_trades(self, strategy: str, lookback):
         if lookback == 0:
@@ -276,7 +277,7 @@ class DBModel():
         the_data = self.cur.fetchall()
         for row in the_data:
             json_data.append(dict(zip(col_headers, row)))
-        return json_data
+        return make_response(json_data, 200)
 
     ### DATA EXPLORER PAGE ###
 
@@ -332,14 +333,14 @@ class DBModel():
         try:
             self.cur.execute(f'select * from trade where trade_id = {trade_id}')
         except Exception as e:
-            return f'Error retrieving trade information: {e}'
+            return make_response(f'Error retrieving trade information: {e}', 500)
 
         col_headers = [x[0] for x in self.cur.description]
         json_data = []
         the_data = self.cur.fetchall()
         for row in the_data:
             json_data.append(dict(zip(col_headers, row)))
-        return json_data
+        return make_response(json_data, 200)
     
     def get_trade_leg_info(self, trade_id: int, leg_no: int):
         """
@@ -387,14 +388,14 @@ class DBModel():
                 order by fill.placement_time;
                 """)
         except Exception as e:
-            return f'Error retrieving trade leg information: {e}'
+            return make_response(f'Error retrieving trade leg information: {e}', 500)
 
         col_headers = [x[0] for x in self.cur.description]
         json_data = []
         the_data = self.cur.fetchall()
         for row in the_data:
             json_data.append(dict(zip(col_headers, row)))
-        return json_data
+        return make_response(json_data, 200)
 
     def get_fill_info(self, fill_id: int):
         """
@@ -422,7 +423,7 @@ class DBModel():
         the_data = self.cur.fetchall()
         for row in the_data:
             json_data.append(dict(zip(col_headers, row)))
-        return json_data
+        return make_response(json_data, 200)
 
     ### HELPERS ###
 
