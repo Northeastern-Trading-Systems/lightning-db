@@ -57,7 +57,10 @@ def get_strategy_status():  # <-- Status: Passing All Tests
             s_capital_usage += open_trades[i]['capital_usage']
     except Exception as e:
         s_capital_usage = 0
-    s_active_trades = len(open_trades)
+    try:
+        s_active_trades = len(open_trades)
+    except:
+        s_active_trades = 0
 
     # Format and return as a JSON
     return jsonify(strategy_name=s_name,
