@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, make_response
 from src import db
 from src.db_model import DBModel
 import pandas as pd
@@ -29,7 +29,7 @@ def get_port_risk_metrics():
     }
     """
     
-    return 'Not Implemented Yet'
+    return make_response('Not Implemented Yet', 200)
 
 # TODO
 @rm_blueprint.route('/get_strategy_risk_metrics')
@@ -41,8 +41,8 @@ def get_strategy_risk_metrics():
     try:
         strategy = request.args.get('strategy')
         if db_model.strategy_exists(strategy) == False:
-            return f'Error: Strategy {strategy} does not exist.'
+            return make_response(f'Error: Strategy {strategy} does not exist.', 400)
     except Exception as e:
-        return f'Error: {e}'
+        return make_response(f'Error: {e}', 500)
 
-    return 'Not Implemented Yet'
+    return make_response('Not Implemented Yet', 200)

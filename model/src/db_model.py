@@ -47,7 +47,7 @@ class DBModel():
         the_data = self.cur.fetchall()
         for row in the_data:
             json_data.append(dict(zip(col_headers, row)))
-        return make_response(json_data, 200)
+        return json_data
     
     def get_daily_pnl(self):
         """
@@ -83,9 +83,9 @@ class DBModel():
             json_data2 = []
             for entry in df.values:
                 json_data2.append(dict(zip(col_headers, entry)))
-            return make_response(json_data2, 200)
+            return json_data2
         except:
-            return make_response(json_data, 200)
+            return json_data
 
     def get_active_strategies(self):
         """
@@ -103,7 +103,7 @@ class DBModel():
         the_data = self.cur.fetchall()
         for row in the_data:
             json_data.append(dict(zip(col_headers, row)))
-        return make_response(json_data, 200)
+        return json_data
 
     def get_strategy_statistics(self, strategy):
         """
@@ -147,7 +147,7 @@ class DBModel():
                 'sharpe': round(sharpe, 2)
             }
 
-            return make_response(r_json, 200)
+            return r_json
         except Exception as e:
             return make_response(f'Error converting strategy information to JSON: {e}', 500)
 
@@ -178,7 +178,7 @@ class DBModel():
         the_data = self.cur.fetchall()
         for row in the_data:
             json_data.append(dict(zip(col_headers, row)))
-        return make_response(json_data, 200)
+        return json_data
 
     def get_open_trades(self, strategy: str):
         """
@@ -241,7 +241,7 @@ class DBModel():
         the_data = self.cur.fetchall()
         for row in the_data:
             json_data.append(dict(zip(col_headers, row)))
-        return make_response(json_data, 200)
+        return json_data
 
     def get_historical_trades(self, strategy: str, lookback):
         if lookback == 0:
@@ -277,7 +277,7 @@ class DBModel():
         the_data = self.cur.fetchall()
         for row in the_data:
             json_data.append(dict(zip(col_headers, row)))
-        return make_response(json_data, 200)
+        return json_data
 
     ### DATA EXPLORER PAGE ###
 
@@ -340,7 +340,7 @@ class DBModel():
         the_data = self.cur.fetchall()
         for row in the_data:
             json_data.append(dict(zip(col_headers, row)))
-        return make_response(json_data, 200)
+        return json_data
     
     def get_trade_leg_info(self, trade_id: int, leg_no: int):
         """
@@ -395,7 +395,7 @@ class DBModel():
         the_data = self.cur.fetchall()
         for row in the_data:
             json_data.append(dict(zip(col_headers, row)))
-        return make_response(json_data, 200)
+        return json_data
 
     def get_fill_info(self, fill_id: int):
         """
@@ -423,7 +423,7 @@ class DBModel():
         the_data = self.cur.fetchall()
         for row in the_data:
             json_data.append(dict(zip(col_headers, row)))
-        return make_response(json_data, 200)
+        return json_data
 
     ### HELPERS ###
 
