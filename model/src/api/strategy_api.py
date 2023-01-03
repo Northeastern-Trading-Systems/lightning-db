@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, make_response
 from src import db
 from src.db_model import DBModel
 import pandas as pd
@@ -33,16 +33,16 @@ def get_strategy_status():  # <-- Status: Passing All Tests
     try:
         strategy = request.args.get('strategy')
         if strategy == '' or strategy == None: 
-            return 'Error: No strategy specified'
+            return make_response('Error: No strategy specified', 400)
     except Exception as e:
-        return f'Error: {e}'
+        return make_response(f'Error: {e}', 500)
 
     # Get the strategy info and open trades from the DB
     try:
         strategy_info = db_model.get_strategy_info(strategy)
         open_trades = db_model.get_open_trades(strategy)
     except Exception as e:
-        return f'Error retrieving Database Model strategy information: {e}'
+        return make_response(f'Error retrieving Database Model strategy information: {e}', 500)
     
     # Get variables for the return JSON
     s_name = strategy
@@ -57,14 +57,17 @@ def get_strategy_status():  # <-- Status: Passing All Tests
             s_capital_usage += open_trades[i]['capital_usage']
     except Exception as e:
         s_capital_usage = 0
-    s_active_trades = len(open_trades)
+    try:
+        s_active_trades = len(open_trades)
+    except:
+        s_active_trades = 0
 
     # Format and return as a JSON
-    return jsonify(strategy_name=s_name,
+    return make_response(jsonify(strategy_name=s_name,
         strategy_id=s_id,
         active_trades=s_active_trades,
         capital_usage=s_capital_usage,
-            running_on=s_running_on)
+        running_on=s_running_on), 200)
 
 @strategy_blueprint.route('/get_strategy_statistics')
 def get_strategy_statistics():  # <-- Status: Passing All Tests
@@ -85,15 +88,15 @@ def get_strategy_statistics():  # <-- Status: Passing All Tests
     try:
         strategy = request.args.get('strategy')
         if db_model.strategy_exists(strategy) == False:
-            return f'Error: Strategy {strategy} does not exist.'
+            return make_response(f'Error: Strategy {strategy} does not exist.', 400)
     except Exception as e:
-        return f'Error: {e}'
+        return make_response(f'Error: {e}', 500)
 
     try:
         stats = db_model.get_strategy_statistics(strategy)
-        return stats
+        return make_response(stats, 200)
     except Exception as e:
-        return f'Error: {e}'
+        return make_response(f'Error: {e}', 500)
 
 @strategy_blueprint.route('/get_strategy_hist_trades')
 def get_strategy_hist_trades():  # <-- Status: Passing All Tests
@@ -113,9 +116,9 @@ def get_strategy_hist_trades():  # <-- Status: Passing All Tests
         # Potentially convert the type to an integer
         if type(lookback) == str: lookback = int(lookback)
 
-        return db_model.get_historical_trades(strategy, lookback)
+        return make_response(db_model.get_historical_trades(strategy, lookback), 200)
     except Exception as e:
-        return f'Error: {e}'
+        return make_response(f'Error: {e}', 500)
 
 @strategy_blueprint.route('/get_strategy_open_trades')
 def get_strategy_open_trades():  # <-- Status: Passing All Tests
@@ -131,9 +134,9 @@ def get_strategy_open_trades():  # <-- Status: Passing All Tests
     try:
         strategy = request.args.get('strategy')
 
-        return db_model.get_open_trades(strategy)
+        return make_response(db_model.get_open_trades(strategy), 200)
     except Exception as e:
-        return f'Error: {e}'
+        return make_response(f'Error: {e}', 500)
 
 @strategy_blueprint.route('/get_strategy_pnl')
 def get_strategy_pnl():  # <-- Status: Passing All Tests
@@ -151,15 +154,15 @@ def get_strategy_pnl():  # <-- Status: Passing All Tests
     try:
         strategy = request.args.get('strategy')
         if db_model.strategy_exists(strategy) == False:
-            return f'Error: Strategy {strategy} does not exist.'
+            return make_response(f'Error: Strategy {strategy} does not exist.', 400)
     except Exception as e:
-        return f'Error: {e}'
+        return make_response(f'Error: {e}', 500)
 
     # Next, get the P&L from the DB
     try:
         json_data = db_model.get_strategy_pnl(strategy)
     except Exception as e:
-        return f'Error getting Strategy PNL: {e}'
+        return make_response(f'Error getting Strategy PNL: {e}', 500)
 
     # Lastly, convert the JSON to a dataframe and perform the necessary data manipulation.
     try:
@@ -174,7 +177,7 @@ def get_strategy_pnl():  # <-- Status: Passing All Tests
         for entry in df.values:
             json_data.append(dict(zip(col_headers, entry)))
     except Exception as e:
-        return f'Error converting JSON data to a DataFrame: {e}'
+        return make_response(f'Error converting JSON data to a DataFrame: {e}', 500)
         
     # Error with pd.Dataframe - need to pass a list of lists not a list of dicts
-    return json_data
+    return make_response(json_data, 200)

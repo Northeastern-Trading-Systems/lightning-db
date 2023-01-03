@@ -39,7 +39,7 @@ class DBModel():
             else:
                 self.cur.execute(f'select * from strategy where strategy_name = "{strategy}"')
         except Exception as e:
-            return f'Error retrieving strategy information: {e}'
+            raise Exception(f'Error retrieving strategy information: {e}')
 
         col_headers = [x[0] for x in self.cur.description]
         json_data = []
@@ -62,7 +62,7 @@ class DBModel():
                 order by trade.open_time;
                 """)
         except Exception as e:
-            return f'Error retrieving strategy information: {e}'
+            raise Exception(f'Error retrieving strategy information: {e}')
 
         col_headers = [x[0] for x in self.cur.description]
         json_data = []
@@ -95,7 +95,7 @@ class DBModel():
         try:
             self.cur.execute(f'select * from strategy where termination_date is null')
         except Exception as e:
-            return f'Error retrieving strategy information: {e}'
+            raise Exception(f'Error retrieving strategy information: {e}')
 
         col_headers = [x[0] for x in self.cur.description]
         json_data = []
@@ -123,7 +123,7 @@ class DBModel():
         try:
             strategy_pnl_json = self.get_strategy_pnl(strategy)
         except Exception as e:
-            return f'Error retrieving strategy information: {e}'
+            raise Exception(f'Error retrieving strategy information: {e}')
 
         # Now, calculate the statistics
         try:
@@ -148,7 +148,7 @@ class DBModel():
 
             return r_json
         except Exception as e:
-            return f'Error converting strategy information to JSON: {e}'
+            raise Exception(f'Error converting strategy information to JSON: {e}')
 
     ### STRAGEGY PAGE ###
 
@@ -170,7 +170,7 @@ class DBModel():
                 order by trade.open_time;
                 """)
         except Exception as e:
-            return f'Error retrieving strategy information: {e}'
+            raise Exception(f'Error retrieving strategy information: {e}')
 
         col_headers = [x[0] for x in self.cur.description]
         json_data = []
@@ -233,7 +233,7 @@ class DBModel():
                 order by trade.open_time;
                 """)
         except Exception as e:
-            return f'Error retrieving open trades: {e}'
+            raise Exception(f'Error retrieving open trades: {e}')
 
         col_headers = [x[0] for x in self.cur.description]
         json_data = []
@@ -332,7 +332,7 @@ class DBModel():
         try:
             self.cur.execute(f'select * from trade where trade_id = {trade_id}')
         except Exception as e:
-            return f'Error retrieving trade information: {e}'
+            raise Exception(f'Error retrieving trade information: {e}')
 
         col_headers = [x[0] for x in self.cur.description]
         json_data = []
@@ -387,7 +387,7 @@ class DBModel():
                 order by fill.placement_time;
                 """)
         except Exception as e:
-            return f'Error retrieving trade leg information: {e}'
+            raise Exception(f'Error retrieving trade leg information: {e}')
 
         col_headers = [x[0] for x in self.cur.description]
         json_data = []
@@ -415,7 +415,7 @@ class DBModel():
         try:
             self.cur.execute(f'select * from fill where fill_id = {fill_id}')
         except Exception as e:
-            return f'Error retrieving fill information: {e}'
+            raise Exception(f'Error retrieving fill information: {e}')
         
         col_headers = [x[0] for x in self.cur.description]
         json_data = []
