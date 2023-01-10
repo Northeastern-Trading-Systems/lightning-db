@@ -4,11 +4,13 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import pandas as pd
 
+
 class DBModel():
     """
     Model for methods that interface with the database connection.
     Deployment: AWS RDS: MySQL
     """
+
     def __init__(self):
         self.cur = db.cursor()
 
@@ -37,7 +39,8 @@ class DBModel():
             if strategy == '*':
                 self.cur.execute(f'select * from strategy')
             else:
-                self.cur.execute(f'select * from strategy where strategy_name = "{strategy}"')
+                self.cur.execute(
+                    f'select * from strategy where strategy_name = "{strategy}"')
         except Exception as e:
             raise Exception(f'Error retrieving strategy information: {e}')
 
@@ -47,7 +50,7 @@ class DBModel():
         for row in the_data:
             json_data.append(dict(zip(col_headers, row)))
         return json_data
-    
+
     def get_daily_pnl(self):
         """
         Method to get all daily P&L across the entire portfolio. Data requires further cleaning in the strategy api method.
@@ -91,9 +94,10 @@ class DBModel():
         Get a list of all active strategies. An active strategy is defined as one that is currently running on an EC2.
         Returns all attributes of the strategy table.
         """
-        
+
         try:
-            self.cur.execute(f'select * from strategy where termination_date is null')
+            self.cur.execute(
+                f'select * from strategy where termination_date is null')
         except Exception as e:
             raise Exception(f'Error retrieving strategy information: {e}')
 
@@ -118,7 +122,7 @@ class DBModel():
         Sharpe: <Cumulative Sharpe Ratio of Strategy>
         ---------------------------------------
         """
-        
+
         # First, get the pnl information for statistics
         try:
             strategy_pnl_json = self.get_strategy_pnl(strategy)
@@ -129,14 +133,16 @@ class DBModel():
         try:
             df = pd.DataFrame(strategy_pnl_json)
             cum_pnl = df['PNL'].sum()
-            ytd_pnl = df[df['Date'] >= datetime.now().replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)].sum()['PNL']
+            ytd_pnl = df[df['Date'] >= datetime.now().replace(
+                month=1, day=1, hour=0, minute=0, second=0, microsecond=0)].sum()['PNL']
             days = (df['Date'].max() - df['Date'].min()).days
             years = (df['Date'].max() - df['Date'].min()).days / 365
             avg_annual_return = (cum_pnl / years)
             avg_daily_return = (cum_pnl / days)
-            avg_trades_per_day = df['PNL'].count() / (df['Date'].max() - df['Date'].min()).days
+            avg_trades_per_day = df['PNL'].count(
+            ) / (df['Date'].max() - df['Date'].min()).days
             sharpe = cum_pnl / df['PNL'].std()
-        
+
             r_json = {
                 'cumulative_pnl': round(cum_pnl, 2),
                 'ytd_pnl': round(ytd_pnl, 2),
@@ -148,7 +154,8 @@ class DBModel():
 
             return r_json
         except Exception as e:
-            raise Exception(f'Error converting strategy information to JSON: {e}')
+            raise Exception(
+                f'Error converting strategy information to JSON: {e}')
 
     ### STRAGEGY PAGE ###
 
@@ -156,11 +163,11 @@ class DBModel():
         """
         Method to get all daily P&L across the life of a strategy. Data requires further cleaning in the strategy api method.
         """
-        
+
         # Next, get the pnl information
         try:
             self.cur.execute(f"""
-                Select trade.open_time as Date, sum(fill.qty * fill.avg) * -1 as PNL
+                Select trade.open_time as Date, sum(fill.qty * fill.avg) * -1 as pnl
                 from trade
                 join trade_leg on trade.trade_id = trade_leg.trade_id
                 join fill on trade_leg.leg_no = fill.leg_no and trade_leg.trade_id = fill.trade_id
@@ -183,7 +190,7 @@ class DBModel():
         """
         Method to get all open trades on a particular strategy.
         Output will come in the format of a JSON object with attributes as described below:
-        
+
         ----- Example -----
 
         The following represents a trade made under the MeanReversionLunchBreak strategy that:
@@ -270,7 +277,7 @@ class DBModel():
                 group by trade_id
                 order by trade.open_time;
                 """)
-                
+
         col_headers = [x[0] for x in self.cur.description]
         json_data = []
         the_data = self.cur.fetchall()
@@ -330,7 +337,8 @@ class DBModel():
         """
 
         try:
-            self.cur.execute(f'select * from trade where trade_id = {trade_id}')
+            self.cur.execute(
+                f'select * from trade where trade_id = {trade_id}')
         except Exception as e:
             raise Exception(f'Error retrieving trade information: {e}')
 
@@ -340,7 +348,7 @@ class DBModel():
         for row in the_data:
             json_data.append(dict(zip(col_headers, row)))
         return json_data
-    
+
     def get_trade_leg_info(self, trade_id: int, leg_no: int):
         """
         Method to get all current information for a particular trade leg identified by the trade_id and leg_no parameters.
@@ -416,7 +424,7 @@ class DBModel():
             self.cur.execute(f'select * from fill where fill_id = {fill_id}')
         except Exception as e:
             raise Exception(f'Error retrieving fill information: {e}')
-        
+
         col_headers = [x[0] for x in self.cur.description]
         json_data = []
         the_data = self.cur.fetchall()
@@ -435,7 +443,8 @@ class DBModel():
             return False
 
         try:
-            self.cur.execute(f'select * from strategy where strategy_name = "{strategy}"')
+            self.cur.execute(
+                f'select * from strategy where strategy_name = "{strategy}"')
         except Exception as e:
             return False
 
