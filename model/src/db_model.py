@@ -57,7 +57,7 @@ class DBModel():
         """
         try:
             self.cur.execute("""
-                Select trade.open_time as Date, sum(fill.qty * fill.avg) * -1 as pnl
+                Select trade.open_time as date, sum(fill.qty * fill.avg) * -1 as pnl
                 from trade
                 join trade_leg on trade.trade_id = trade_leg.trade_id
                 join fill on trade_leg.leg_no = fill.leg_no and trade_leg.trade_id = fill.trade_id
@@ -76,11 +76,11 @@ class DBModel():
             json_data_c = json_data.copy()
             # Error with pd.Dataframe - need to pass a list of lists not a list of dicts
             df = pd.DataFrame(json_data_c)
-            df['Date'] = pd.to_datetime(df['Date'])
-            df = df.set_index('Date')
+            df['date'] = pd.to_datetime(df['date'])
+            df = df.set_index('date')
             df = df.groupby(pd.Grouper(freq='D')).sum()
             df = df.reset_index()
-            df['Date'] = df['Date'].dt.strftime('%Y-%m-%d')
+            df['date'] = df['date'].dt.strftime('%Y-%m-%d')
             col_headers = [x for x in df.columns]
             json_data2 = []
             for entry in df.values:
@@ -133,14 +133,14 @@ class DBModel():
         try:
             df = pd.DataFrame(strategy_pnl_json)
             cum_pnl = df['PNL'].sum()
-            ytd_pnl = df[df['Date'] >= datetime.now().replace(
+            ytd_pnl = df[df['date'] >= datetime.now().replace(
                 month=1, day=1, hour=0, minute=0, second=0, microsecond=0)].sum()['PNL']
-            days = (df['Date'].max() - df['Date'].min()).days
-            years = (df['Date'].max() - df['Date'].min()).days / 365
+            days = (df['date'].max() - df['date'].min()).days
+            years = (df['date'].max() - df['date'].min()).days / 365
             avg_annual_return = (cum_pnl / years)
             avg_daily_return = (cum_pnl / days)
             avg_trades_per_day = df['PNL'].count(
-            ) / (df['Date'].max() - df['Date'].min()).days
+            ) / (df['date'].max() - df['date'].min()).days
             sharpe = cum_pnl / df['PNL'].std()
 
             r_json = {
@@ -167,7 +167,7 @@ class DBModel():
         # Next, get the pnl information
         try:
             self.cur.execute(f"""
-                Select trade.open_time as Date, sum(fill.qty * fill.avg) * -1 as pnl
+                Select trade.open_time as date, sum(fill.qty * fill.avg) * -1 as pnl
                 from trade
                 join trade_leg on trade.trade_id = trade_leg.trade_id
                 join fill on trade_leg.leg_no = fill.leg_no and trade_leg.trade_id = fill.trade_id
