@@ -13,6 +13,7 @@ Strategy Page:
 Stores all routes to get information about specific strategies.
 """
 
+
 @strategy_blueprint.route('/get_strategy_status')
 def get_strategy_status():  # <-- Status: Passing All Tests
     """
@@ -32,7 +33,7 @@ def get_strategy_status():  # <-- Status: Passing All Tests
     # Get the strategy from the request
     try:
         strategy = request.args.get('strategy')
-        if strategy == '' or strategy == None: 
+        if strategy == '' or strategy == None:
             return make_response('Error: No strategy specified', 400)
     except Exception as e:
         return make_response(f'Error: {e}', 500)
@@ -43,7 +44,7 @@ def get_strategy_status():  # <-- Status: Passing All Tests
         open_trades = db_model.get_open_trades(strategy)
     except Exception as e:
         return make_response(f'Error retrieving Database Model strategy information: {e}', 500)
-    
+
     # Get variables for the return JSON
     s_name = strategy
     try:
@@ -64,10 +65,11 @@ def get_strategy_status():  # <-- Status: Passing All Tests
 
     # Format and return as a JSON
     return make_response(jsonify(strategy_name=s_name,
-        strategy_id=s_id,
-        active_trades=s_active_trades,
-        capital_usage=s_capital_usage,
-        running_on=s_running_on), 200)
+                                 strategy_id=s_id,
+                                 active_trades=s_active_trades,
+                                 capital_usage=s_capital_usage,
+                                 running_on=s_running_on), 200)
+
 
 @strategy_blueprint.route('/get_strategy_statistics')
 def get_strategy_statistics():  # <-- Status: Passing All Tests
@@ -98,6 +100,7 @@ def get_strategy_statistics():  # <-- Status: Passing All Tests
     except Exception as e:
         return make_response(f'Error: {e}', 500)
 
+
 @strategy_blueprint.route('/get_strategy_hist_trades')
 def get_strategy_hist_trades():  # <-- Status: Passing All Tests
     """
@@ -114,11 +117,13 @@ def get_strategy_hist_trades():  # <-- Status: Passing All Tests
         strategy = request.args.get('strategy')
         lookback = request.args.get('lookback')
         # Potentially convert the type to an integer
-        if type(lookback) == str: lookback = int(lookback)
+        if type(lookback) == str:
+            lookback = int(lookback)
 
         return make_response(db_model.get_historical_trades(strategy, lookback), 200)
     except Exception as e:
         return make_response(f'Error: {e}', 500)
+
 
 @strategy_blueprint.route('/get_strategy_open_trades')
 def get_strategy_open_trades():  # <-- Status: Passing All Tests
@@ -138,6 +143,7 @@ def get_strategy_open_trades():  # <-- Status: Passing All Tests
     except Exception as e:
         return make_response(f'Error: {e}', 500)
 
+
 @strategy_blueprint.route('/get_strategy_pnl')
 def get_strategy_pnl():  # <-- Status: Passing All Tests
     """
@@ -145,8 +151,8 @@ def get_strategy_pnl():  # <-- Status: Passing All Tests
     Returns a JSON of the following format:
     ---------------------------------------
     {
-        "Date": <Date>,
-        "P&L": <P&L on Date>
+        "date": <date>,
+        "pnl": <P&L on date>
     }
     ---------------------------------------
     """
@@ -167,17 +173,17 @@ def get_strategy_pnl():  # <-- Status: Passing All Tests
     # Lastly, convert the JSON to a dataframe and perform the necessary data manipulation.
     try:
         df = pd.DataFrame(json_data)
-        df['Date'] = pd.to_datetime(df['Date'])
-        df = df.set_index('Date')
+        df['date'] = pd.to_datetime(df['date'])
+        df = df.set_index('date')
         df = df.groupby(pd.Grouper(freq='D')).sum()
         df = df.reset_index()
-        df['Date'] = df['Date'].dt.strftime('%Y-%m-%d')
+        df['date'] = df['date'].dt.strftime('%Y-%m-%d')
         col_headers = [x for x in df.columns]
         json_data = []
         for entry in df.values:
             json_data.append(dict(zip(col_headers, entry)))
     except Exception as e:
         return make_response(f'Error converting JSON data to a DataFrame: {e}', 500)
-        
+
     # Error with pd.Dataframe - need to pass a list of lists not a list of dicts
     return make_response(json_data, 200)

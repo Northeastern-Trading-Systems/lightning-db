@@ -32,8 +32,8 @@ def get_daily_pnl():  # <-- Status: Passing All Tests
     Returns a JSON of the following format:
     ---------------------------------------
     {
-        "Date": <Date>,
-        "P&L": <P&L on Date>
+        "date": <date>,
+        "pnl": <P&L on date>
     }
     ---------------------------------------
     """
